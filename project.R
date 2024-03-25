@@ -3,6 +3,7 @@ library(tidycensus)
 library(tidyverse)
 library(readxl)
 library(dplyr)
+library(sampling)
 # Load data
 data <- read_excel("G:/My Drive/0. study abroad/academic/11. 2024 Winter/1. SurvMeth 745 Practical Tools for Study Design and Inference/2. Assignments/Project/PrinceGeorgeMD.xlsx", sheet = 2) ## 540 obs with 52 var.
 
@@ -56,8 +57,8 @@ data <- data %>%
   relocate(Tract, .before = BlockGroup) %>% 
   relocate(c(N_tract_18, N_tract_45, N_tract_65, S_tract, "Selection Prob_tract", "Sampling Rate 18_tract", "Expected n 18_tract", "Sampling Rate 45_tract", "Expected n 45_tract", "Sampling Rate 65_tract", "Expected n 65_tract"), .before = TotHH)
 
-
-
+# Sample samples based on calculations above
+set.seed(-1234)
 
 
 
