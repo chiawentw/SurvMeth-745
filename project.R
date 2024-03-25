@@ -9,7 +9,7 @@ data <- read_excel("G:/My Drive/0. study abroad/academic/11. 2024 Winter/1. Surv
 
 # Delete irrelevant data rows and columns
 data <- data[-c(539, 540), ] ## 538 obs with 52 var.
-data <- data[, -c(6:9, 30:33)] ## 538 obs with 44 var.
+data <- data[, -c(4:9, 29:33)] ## 538 obs with 41 var.
 
 # Get Tract numbers by Block Groups and calculate domain population counts for each row (BG)
 data <- data %>% 
@@ -21,7 +21,7 @@ data <- data %>%
   relocate(Tract, .before = BlockGroup) %>% 
   relocate(c(y18, y45, y65), .before = TotHH) ## 538 obs. with 48 var
 # Drop variables we are not using anymore.
-data <- data[, -c(7:48)] ## 538 obs. with 6 var.
+data <- data[, -c(8:45)] ## 538 obs. with 7 var.
 
 # Calculate the values of some terminologies
 n_y18_weighted <- 100/0.6
@@ -36,15 +36,13 @@ m <- 15
 n_bar <- n_weighted/m
 N <- sum(c(data$y18, data$y45, data$y65))
 
-U_tract <- data %>% 
-  select(Tract) %>%   # Select the column containing tracts
-  distinct() %>%      # Get distinct values
+U_tract <- data %>%
+  distinct(Tract) %>%  # Get distinct values of tracts
   nrow() ## 204 because we collapsed 10 Tracts with only one BG
 ##?
 
 U_bg <- data %>% 
-  select(BlockGroup) %>%   
-  distinct() %>%
+  distinct(as.numeric(BlockGroup)) %>%
   nrow() ## 538
 
 data <- data %>% 
