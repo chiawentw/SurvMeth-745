@@ -56,7 +56,7 @@ head(data)
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 data <- data %>%
   arrange(BlockGroup) %>%
   mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1),
@@ -64,9 +64,9 @@ data <- data %>%
 ```
 
 
-### Filter out tracks with only 1 block group 
+### Filter out tracts with only 1 block group 
 
-```{r}
+```{r, eval=FALSE}
 tract_counts <- data %>%
   group_by(Tract) %>%
   summarize(Count = n()) %>%
