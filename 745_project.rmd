@@ -128,7 +128,7 @@ target <- data.frame(Age_Group= c("18-44", "45-64", "65+"),
                  RR = c(0.6, 0.7, 0.85))
 
 target$n_weighted <- target$n / target$RR
-# target$n_weighted
+target$n_weighted
 target$n_i_d <- target$n_weighted / m 
 target$n_i_d
 ```
