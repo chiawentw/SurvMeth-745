@@ -100,16 +100,14 @@ bg_data <- data %>%
 bg_data
 ```
 
+
 ```{r}
 bg_data
 ```
 
 
-
-
-
 ```{r}
-# Get Tract numbers by Block Groups and calculate domain population counts for each row (BG)
+# Get domain population by tracts
 tract_data <- data %>% 
   group_by(Tract) %>%
   mutate(y18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
@@ -129,85 +127,24 @@ target <- data.frame(Age_Group= c("18-44", "45-64", "65+"),
 
 target$n_weighted <- target$n / target$RR
 target$n_weighted
-target$n_i_d <- target$n_weighted / m 
-target$n_i_d
+
+n_weighted <- sum(target$n_weighted)
+q_avg <- n_weighted/m
+q_avg
 ```
 
 
 ```{r}
-filtered_data <- bg_data %>%
-  filter(y18 < 12 | y45 < 10 | y65 < 8)
+N_1 <- sum(tract_data$y18)
+N_2 <- sum(tract_data$y45)
+N_3 <- sum(tract_data$y65)
 
-filtered_data
+target <- target %>%
+  mutate(N_d = c(N_1, N_2, N_3),
+         f_d = n_weighted / N_d)
+
+target$f_d*100 # f_d ()
 ```
-
-
-
-```{r}
-# Delete irrelevant data rows and columns
-data <- data[-c(539, 540), ] ## 538 obs with 52 var.
-data <- data[, -c(4:9, 29:33)] ## 538 obs with 41 var.
-
-# Drop variables we are not using anymore.
-data <- data[, -c(8:45)] ## 538 obs. with 7 var.
-
-# Calculate the values of some terminologies
-n_y18_weighted <- 100/0.6
-f_d18 = n_y18_weighted/sum(data$y18)
-n_y45_weighted <- 100/0.7
-f_d45 = n_y45_weighted/sum(data$y45)
-n_y65_weighted <- 100/0.85
-f_d65 = n_y65_weighted/sum(data$y65)
-n <- 300
-n_weighted <- n_y18_weighted + n_y45_weighted + n_y65_weighted
-m <- 15
-n_bar <- n_weighted/m
-N <- sum(c(data$y18, data$y45, data$y65))
-
-U_tract <- data %>%
-  distinct(Tract) %>%  # Get distinct values of tracts
-  nrow() ## 204 because we collapsed 10 Tracts with only one BG
-
-U_bg <- data %>% 
-  distinct(as.numeric(BlockGroup)) %>%
-  nrow() ## 538
-
-data <- data %>% 
-  group_by(Tract) %>% 
-  mutate(N_tract_18 = sum(y18), N_tract_45 = sum(y45), N_tract_65 = sum(y65)) %>% 
-  mutate(S_tract = sum(f_d18*N_tract_18, f_d45*N_tract_45, f_d65*N_tract_65)) %>% 
-  mutate("Selection Prob_tract" = m*(S_tract/sum(S_tract))) %>% 
-  mutate("Sampling Rate 18_tract" = n_bar*f_d18/S_tract, "Sampling Rate 45_tract" = n_bar*f_d45/S_tract, "Sampling Rate 65_tract" = n_bar*f_d65/S_tract) %>% 
-  mutate("Expected n 18_tract" = N_tract_18*`Sampling Rate 18_tract`, "Expected n 45_tract" = N_tract_45*`Sampling Rate 45_tract`, "Expected n 65_tract" = N_tract_65*`Sampling Rate 65_tract`) 
-  # relocate(Tract, .before = BlockGroup) %>% 
-  # relocate(c(N_tract_18, N_tract_45, N_tract_65, S_tract, "Selection Prob_tract", "Sampling Rate 18_tract", "Expected n 18_tract", "Sampling Rate 45_tract", "Expected n 45_tract", "Sampling Rate 65_tract", "Expected n 65_tract"), .before = TotHH)
-
-# Sample samples based on calculations above
-set.seed(-1234)
-
-
-"YOUR KEY" <- "452bfe5de763525e0910db4aeefe0fdb87e515eb"
-census_api_key("YOUR KEY", install = T, overwrite = T)
-
-
-
-
-# 214 tracts
-# 214/15 using pps
-# sample 100/0.6=167 18-44 yo from 378484; 100/0.7=143 45-64 yo from 245516; 100/0.85=118 65+ yo from 132049
-# N = 756049, n = 428
-
-# composite measure of size for PSU i = S_i = sum(f_d*N_id) --> the expected sample size in PSU i if desired overall sampling rates for all domains were used
-# f_d18 = 167/378484=0.000441234; f_d45 = 143/245516=0.0005824468; f_d65 = 118/132049=0.0008936077
-# m = 15, bar_n = 300/15=20; N_id=
-# 10 block groups with only 1 PSU
-```
-
-
-```{r}
-data[c("y18", "y45")]
-```
-
 
 
 
