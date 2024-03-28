@@ -96,7 +96,7 @@ bg_data <- data %>%
          Qij_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
          Qij_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs),
          Qij = sum(Qij_18, Qij_45, Qij_65)) %>% 
-  select(BlockGroup, Qij, Qij_18, Qij_45, Qij_65)
+  select(BlockGroup, Tract, Qij, Qij_18, Qij_45, Qij_65)
 
 bg_data
 ```
@@ -205,6 +205,10 @@ any(tract_data$pi_ji_45 > 1)
 any(tract_data$pi_ji_65 > 1)
 ```
 
+```{r}
+bg_data %>% 
+  filter(Tract == "24033801106")
+```
 
 
 
