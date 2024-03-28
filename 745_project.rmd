@@ -2,9 +2,9 @@
 title: "PracTools Project"
 date: "3/22/2024"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
   word_document: default
 header-includes:
 - \usepackage{bbm}
@@ -158,9 +158,9 @@ f_3 <- target$f_d[3]
 
 tract_data <- tract_data %>%
   mutate(S_i= Ni_1*f_1 + Ni_2*f_2 + Ni_3*f_3, # composite MOS for PSU i 
-         n_i_18 = n_avg*fd_1*Ni_1/S_i,
-         n_i_45 = n_avg*fd_2*Ni_2/S_i,
-         n_i_65 = n_avg*fd_3*Ni_3/S_i,
+         n_i_18 = n_avg*f_1*Ni_1/S_i,
+         n_i_45 = n_avg*f_2*Ni_2/S_i,
+         n_i_65 = n_avg*f_3*Ni_3/S_i,
          pi_ji_18 = n_i_18 / Ni_1,
          pi_ji_45 = n_i_45 / Ni_2,
          pi_ji_65 = n_i_65 / Ni_3) 
@@ -176,9 +176,9 @@ tract_data[c("Tract","S_i", "n_i_18", "n_i_45", "n_i_65", "pi_i")]
 ```{r}
 bg_data <- bg_data %>%
   mutate(S_ij= Qij_18*f_1 + Qij_45*f_2 + Qij_65*f_3, # composite MOS for SSU j at PSU i 
-         qij_18 = q_avg*fd_1*Qij_18/S_ij,
-         qij_45 = q_avg*fd_2*Qij_45/S_ij,
-         qij_65 = q_avg*fd_3*Qij_65/S_ij) 
+         qij_18 = q_avg*f_1*Qij_18/S_ij,
+         qij_45 = q_avg*f_2*Qij_45/S_ij,
+         qij_65 = q_avg*f_3*Qij_65/S_ij) 
 ```
 
 
@@ -209,6 +209,12 @@ any(tract_data$pi_ji_65 > 1)
 bg_data %>% 
   filter(Tract == "24033801106")
 ```
+
+$$\pi_i = m \frac{S_i}{S_+}, \quad \pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
+
+
+
+
 
 
 
