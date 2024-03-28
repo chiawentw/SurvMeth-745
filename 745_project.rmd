@@ -92,10 +92,11 @@ data <- data %>%
 ```{r}
 bg_data <- data %>% 
   group_by(BlockGroup) %>%
-  mutate(y18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
-         y45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
-         y65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs)) %>% 
-  select(BlockGroup, y18, y45, y65)
+  mutate(Qij_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
+         Qij_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
+         Qij_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs),
+         Qij = sum(Qij_18, Qij_45, Qij_65)) %>% 
+  select(BlockGroup, Qij, Qij_18, Qij_45, Qij_65)
 
 bg_data
 ```
@@ -110,11 +111,12 @@ bg_data
 # Get domain population by tracts
 tract_data <- data %>% 
   group_by(Tract) %>%
-  mutate(y18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
-         y45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
-         y65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs)) %>% 
-  select(Tract, y18, y45, y65) %>%
-  unique()
+  mutate(Ni_1 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
+         Ni_2 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
+         Ni_3 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs)) %>% 
+  select(Tract, Ni_1, Ni_2, Ni_3) %>%
+  unique() %>%
+  mutate(Q_i = sum(Ni_1, Ni_2, Ni_3)) 
 
 tract_data
 ```
@@ -125,25 +127,82 @@ target <- data.frame(Age_Group= c("18-44", "45-64", "65+"),
                  n = c(100, 100, 100), 
                  RR = c(0.6, 0.7, 0.85))
 
-target$n_weighted <- target$n / target$RR
-target$n_weighted
+target <- target %>%
+  mutate(n_weighted = n / RR)
 
-n_weighted <- sum(target$n_weighted)
-q_avg <- n_weighted/m
+target$n_weighted
+n_sum <- sum(target$n_weighted)
+q_avg <- n_sum/m
 q_avg
+n_avg <- n_sum/3
+n_avg
 ```
 
 
 ```{r}
-N_1 <- sum(tract_data$y18)
-N_2 <- sum(tract_data$y45)
-N_3 <- sum(tract_data$y65)
+N_1 <- sum(tract_data$Ni_1)
+N_2 <- sum(tract_data$Ni_2)
+N_3 <- sum(tract_data$Ni_3)
 
 target <- target %>%
   mutate(N_d = c(N_1, N_2, N_3),
          f_d = n_weighted / N_d)
-
 target$f_d*100 # f_d ()
+```
+
+
+```{r}
+f_1 <- target$f_d[1]
+f_2 <- target$f_d[2]
+f_3 <- target$f_d[3]
+
+tract_data <- tract_data %>%
+  mutate(S_i= Ni_1*f_1 + Ni_2*f_2 + Ni_3*f_3, # composite MOS for PSU i 
+         n_i_18 = n_avg*fd_1*Ni_1/S_i,
+         n_i_45 = n_avg*fd_2*Ni_2/S_i,
+         n_i_65 = n_avg*fd_3*Ni_3/S_i,
+         pi_ji_18 = n_i_18 / Ni_1,
+         pi_ji_45 = n_i_45 / Ni_2,
+         pi_ji_65 = n_i_65 / Ni_3) 
+
+S_all <- sum(tract_data$S_i)
+tract_data <- tract_data %>%
+  mutate(pi_i = m*S_i/S_all)
+
+tract_data[c("Tract","S_i", "n_i_18", "n_i_45", "n_i_65", "pi_i")]
+```
+
+
+```{r}
+bg_data <- bg_data %>%
+  mutate(S_ij= Qij_18*f_1 + Qij_45*f_2 + Qij_65*f_3, # composite MOS for SSU j at PSU i 
+         qij_18 = q_avg*fd_1*Qij_18/S_ij,
+         qij_45 = q_avg*fd_2*Qij_45/S_ij,
+         qij_65 = q_avg*fd_3*Qij_65/S_ij) 
+```
+
+
+```{r}
+### quality control check 
+# 1. qij_d* <= Qij(d)
+undersized_bg <- bg_data %>%
+  filter(qij_18 > Qij_18 | qij_45 > Qij_45 | qij_65 > Qij_65)
+undersized_bg
+
+# 2. q_avg <= Q_ij in every PSU 
+any(q_avg > bg_data$Qij) # FALSE -> condition met 
+
+# 3. n*q_avg <= Q_i+ in every SSU 
+any(1*q_avg > tract_data$Q_i) # FALSE -> condition met 
+
+# 4. check selection prob <= 1 
+# pi_i 
+any(tract_data$pi_i > 1)
+
+# pi_j|i 
+any(tract_data$pi_ji_18 > 1)
+any(tract_data$pi_ji_45 > 1)
+any(tract_data$pi_ji_65 > 1)
 ```
 
 
