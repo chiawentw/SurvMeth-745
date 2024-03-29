@@ -34,6 +34,7 @@ library(sf)
 library(leaflet)
 library(tidycensus)
 library(readxl)
+library(sampling)
 options(tigris_class = "sf")
 options(tigris_use_cache = T)
 set.seed(-1234)
@@ -42,22 +43,13 @@ set.seed(-1234)
 
 ```{r}
 library(readxl)
-data <- read_excel("PrinceGeorgeMD.xlsx", sheet=2)
+data_initial <- read_excel("PrinceGeorgeMD.xlsx", sheet=2)
 ```
 
-
-```{r}
-view(data)
-```
-
-
-```{r}
-head(data)
-```
 
 
 ```{r, eval=FALSE}
-data <- data %>%
+data_initial <- data_initial %>%
   arrange(BlockGroup) %>%
   mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1),
          BlockGroupID = as.numeric(substr(BlockGroup, nchar(BlockGroup), nchar(BlockGroup))))
@@ -67,13 +59,13 @@ data <- data %>%
 ### Filter out tracts with only 1 block group 
 
 ```{r, eval=FALSE}
-tract_counts <- data %>%
+tract_counts <- data_initial %>%
   group_by(Tract) %>%
   summarize(Count = n()) %>%
   filter(Count == 1) %>%
   ungroup()
 
-single_block_groups <- data %>%
+single_block_groups <- data_initial %>%
   inner_join(tract_counts, by = "Tract")
 
 single_block_groups
@@ -179,6 +171,7 @@ bg_data <- bg_data %>%
          qij_18 = q_avg*f_1*Qij_18/S_ij,
          qij_45 = q_avg*f_2*Qij_45/S_ij,
          qij_65 = q_avg*f_3*Qij_65/S_ij) 
+bg_data
 ```
 
 
@@ -213,8 +206,62 @@ bg_data %>%
 $$\pi_i = m \frac{S_i}{S_+}, \quad \pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
 
 
+```{r}
+PG_tract <- tracts(state="MD", county="Prince", year=2020)
+PG_tract_trans <- st_transform(PG_tract,
+"+proj=longlat +datum=WGS84")
+
+PG_bg <- block_groups(state="MD", county="Prince", year=2020)
+PG_bg_trans <- st_transform(PG_bg, "+proj=longlat +datum=WGS84")
+```
+
+
+```{r}
+single_tract_IDs <- single_block_groups$BlockGroup
+single_tract <- PG_bg_trans %>%
+  filter(GEOID %in% single_tract_IDs)
+```
 
 
 
+```{r}
+leaflet() %>%
+  addTiles() %>%
+  addPolygons(data=PG_tract_trans,
+              popup = ~NAME,
+              fillOpacity = 0,
+              fillColor= "snow") %>%
+  addPolygons(data=PG_bg_trans,
+              popup = ~GEOID,
+              color = "black",
+              weight = 1,
+              opacity= 1,
+              smoothFactor = 1,
+              fillOpacity = 0,
+              fillColor= "snow") %>%
+  addPolygons(data=single_tract,
+              color='yellow',
+              popup = ~GEOID,
+              weight=1, 
+              fillOpacity = 1,
+              fillColor="yellow")
+              
+```
+
+# Sampling 
+
+## 1st stage - 15 PSU 
+```{r}
+pik<- inclusionprobabilities(tract_data$pi_i, 15)
+psu_s=UPsystematic(pik)
+which(psu_s==1)
+getdata(tract_data, psu_s)
+```
+
+## 2nd stage - sample BG 
+
+```{r}
+
+```
 
 
