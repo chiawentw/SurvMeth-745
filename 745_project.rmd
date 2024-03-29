@@ -65,12 +65,6 @@ PG_bg_trans <- st_transform(PG_bg, "+proj=longlat +datum=WGS84")
 ```
 
 
-```{r}
-single_tract_IDs <- single_block_groups$BlockGroup
-single_tract <- PG_bg_trans %>%
-  filter(GEOID %in% single_tract_IDs)
-```
-
 ### Filter out tracts with only 1 block group 
 
 ```{r, eval=FALSE}
@@ -83,7 +77,14 @@ tract_counts <- data_initial %>%
 single_block_groups <- data_initial %>%
   inner_join(tract_counts, by = "Tract")
 
-single_block_groups
+# single_block_groups
+
+single_tract_IDs <- single_block_groups$BlockGroup
+
+single_tract <- PG_bg_trans %>%
+  filter(GEOID %in% single_tract_IDs)
+
+# single_tract
 ```
 
 ### check the map to make sure the block groups we will combine are geographically close
