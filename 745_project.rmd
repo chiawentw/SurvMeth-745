@@ -449,7 +449,7 @@ leaflet() %>%
               popup = ~paste("Sampled", "<br>", "Tract": Tract, "<br>", "Block Group Count:", n), 
               weight = 1, 
               fillOpacity = 0,
-              fillColor="snow")
+              fillColor="snow") %>% 
   # Selected Block Groups
   addPolygons(data = selected_ssu_data,
               color ='yellow',
