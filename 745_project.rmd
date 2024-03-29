@@ -321,17 +321,74 @@ pik <- inclusionprobabilities(tract_data$pi_i, 15)
 psu_s=UPsystematic(pik)
 selected_psu <- which(psu_s==1)
 selected_psu
-getdata(tract_data, psu_s)
+selected_psu_data <- getdata(tract_data, psu_s)
+selected_psu_data ## the combined block group was not selected
 ```
 
 ## 2nd stage - sample BG 
 
 ```{r}
-nh <- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-pik_bg <- inclusionprobastrata(selected_psu, nh)
-psu_s=UPsystematic(pik)
-which(psu_s==1)
-getdata(tract_data, psu_s)
+bg_data_selected_psu <- bg_data %>%
+  filter(Tract %in% selected_psu_data$Tract)
+verify_15_psu <- bg_data_selected_psu %>% 
+  group_by(Tract) %>% 
+  summarise(n = n_distinct(Tract))
+verify_15_psu <- sum(nrow(verify_15_psu)) ## 15
+
+# Get unique Tract values
+unique_tracts <- unique(bg_data_selected_psu$Tract)
+
+# Create an empty list to store the subsets
+tract_data_list <- list()
+
+# Iterate over each unique Tract
+for (tract_value in unique_tracts) {
+  # Subset block groups for the current Tract
+  subset_data <- subset(bg_data_selected_psu, Tract == tract_value)
+  
+  # Store the subset data frame in the list
+  tract_data_list[[paste0("Tract_", tract_value)]] <- subset_data
+}
+
+
+# Create an empty list to store the results for each Tract
+results_list <- list()
+
+# Iterate over each subset data frame
+for (i in seq_along(tract_data_list)) {
+  # Get the subset data frame
+  subset_data <- tract_data_list[[i]]
+  
+  # Calculate inclusion probabilities
+  pik_bg <- inclusionprobabilities(subset_data$pi_ij, 1)
+  
+  # Generate systematic sampling
+  ssu_s <- UPsystematic(pik_bg)
+  
+  # Get selected SSU indices
+  selected_ssu <- which(ssu_s == 1)
+  
+  # Get data for selected SSUs
+  selected_ssu_data <- getdata(subset_data, ssu_s)
+  
+  # Store the results in the list
+  results_list[[i]] <- list(
+    pik_bg = pik_bg,
+    ssu_s = ssu_s,
+    selected_ssu = selected_ssu,
+    selected_ssu_data = selected_ssu_data
+  )
+}
+
+selected_ssu_data <- data.frame()
+
+# Loop through each element in the results_list
+for (i in seq_along(results_list)) {
+  # Append the subset dataframe to selected_ssu_data
+  selected_ssu_data <- rbind(selected_ssu_data, results_list[[i]]$selected_ssu_data)
+}
+
+selected_ssu_data
 ```
 
 
