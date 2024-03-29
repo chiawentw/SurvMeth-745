@@ -34,6 +34,7 @@ library(sf)
 library(leaflet)
 library(tidycensus)
 library(readxl)
+library(writexl)
 library(sampling)
 options(tigris_class = "sf")
 options(tigris_use_cache = T)
@@ -266,8 +267,9 @@ bg_data <- bg_data %>%
 ) 
 
 # selection probability of each SSU
+m_2 <- 1 
 bg_data <- bg_data %>%
-  mutate(pi_ij = m*S_ij/sum(bg_data$S_ij))
+  mutate(pi_ij = m_2*S_ij/sum(bg_data$S_ij))
 
 bg_data
 ```
@@ -390,6 +392,8 @@ for (i in seq_along(results_list)) {
 }
 
 selected_ssu_data
+
+write_xlsx(selected_ssu_data, "sample.xlsx")
 ```
 
 
