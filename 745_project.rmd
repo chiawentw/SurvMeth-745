@@ -269,7 +269,8 @@ bg_data <- bg_data %>%
 # selection probability of each SSU
 m_2 <- 1 
 bg_data <- bg_data %>%
-  mutate(pi_ij = m_2*S_ij/sum(bg_data$S_ij))
+  left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
+  mutate(pi_ij = m_2 * S_ij / S_i)
 
 bg_data
 ```
@@ -291,7 +292,7 @@ any(1*q_avg > tract_data$Q_i) # FALSE -> condition met
 
 # 4. check selection prob <= 1 
 # pi_i 
-any(tract_data$pi_i > 1)
+any(tract_data$pi_i > 1) # FALSE -> condition met
 
 # pi_j|i 
 # any(tract_data$pi_ji_18 > 1)
@@ -307,6 +308,8 @@ bg_data %>%
 ```
 
 $$\pi_i = m \frac{S_i}{S_+}, \quad \pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
+
+$$\pi_{ij} = m \frac{S_{ij}}{S_i}$$
 
 ### combine the undersized block group with the next block group in its tract
 
