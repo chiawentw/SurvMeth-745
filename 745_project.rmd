@@ -303,9 +303,10 @@ bg_data %>%
   filter(Tract == "24033801106")
 ```
 
-$$\pi_i = m \frac{S_i}{S_+}, \quad \pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
+$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{ij} = m_{SSU} \frac{S_{ij}}{S_i}$$ 
+#$$\pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
 
-$$\pi_{ij} = m \frac{S_{ij}}{S_i}$$
+
 
 ### combine the undersized block group with the next block group in its tract
 
