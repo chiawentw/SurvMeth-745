@@ -309,12 +309,83 @@ $$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{ij} = m_{SSU} \frac{S_{ij}}{S_i}$$
 #$$\pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
 
 
-
 ### combine the undersized block group with the next block group in its tract
 
 ```{r}
 data$BlockGroup[data$BlockGroup == "240338011061"] <- "240338011062"
 ```
+
+### descriptive statistics of the final frame 
+
+```{r}
+frame_data <- read_excel("PrinceGeorgeMD_final.xlsx", sheet = 2) 
+
+frame_data <- frame_data %>% 
+  na.omit() %>%
+  mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup)
+```
+
+
+```{r}
+## update tract data and bg data 
+tract_data <- frame_data %>% 
+  group_by(Tract) %>%
+  mutate(Qi_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
+         Qi_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
+         Qi_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs)) %>% 
+  select(Tract, Qi_18, Qi_45, Qi_65) %>%
+  unique() %>%
+  mutate(Q_i = sum(Qi_18, Qi_45, Qi_65)) 
+
+bg_data <- frame_data %>% 
+  group_by(BlockGroup) %>%
+  mutate(Qij_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
+         Qij_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
+         Qij_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs),
+         Qij = sum(Qij_18, Qij_45, Qij_65)) %>% 
+  select(BlockGroup, Tract, Qij, Qij_18, Qij_45, Qij_65)
+```
+
+
+```{r}
+tract_data <- tract_data %>%
+  mutate(S_i= Qi_18*f_1 + Qi_45*f_2 + Qi_65*f_3, # composite MOS for PSU i 
+         S_i_18 = Qi_18*f_1,
+         S_i_45 = Qi_45*f_2,
+         S_i_65 = Qi_65*f_3,
+         q_i_18 = n_avg*f_1*Qi_18/S_i,
+         q_i_45 = n_avg*f_2*Qi_45/S_i,
+         q_i_65 = n_avg*f_3*Qi_65/S_i)
+
+tract_data <- tract_data %>%
+  mutate(S_i= Qi_18*f_1 + Qi_45*f_2 + Qi_65*f_3, # composite MOS for PSU i 
+         S_i_18 = Qi_18*f_1,
+         S_i_45 = Qi_45*f_2,
+         S_i_65 = Qi_65*f_3,
+         q_i_18 = n_avg*f_1*Qi_18/S_i,
+         q_i_45 = n_avg*f_2*Qi_45/S_i,
+         q_i_65 = n_avg*f_3*Qi_65/S_i)
+
+# selection probability of each PSU
+tract_data <- tract_data %>%
+  mutate(pi_i = m*S_i/S_all)
+```
+
+
+```{r}
+bg_data <- bg_data %>%
+  mutate(S_ij = Qij_18*f_1 + Qij_45*f_2 + Qij_65*f_3, # composite MOS for SSU j at PSU i 
+         qij_18 = q_avg*f_1*Qij_18/S_ij,
+         qij_45 = q_avg*f_2*Qij_45/S_ij,
+         qij_65 = q_avg*f_3*Qij_65/S_ij) 
+
+# selection probability of each SSU
+m_2 <- 1 
+bg_data <- bg_data %>%
+  left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
+  mutate(pi_ij = m_2 * S_ij / S_i)
+```
+
 
 # Sampling 
 
