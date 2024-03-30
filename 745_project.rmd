@@ -176,37 +176,52 @@ n_avg
 ```
 
 ```{r}
-# number of population counts for each domain and across domains in SSU j within PSU i
-bg_data <- data %>% 
-  group_by(BlockGroup) %>%
-  mutate(Qij_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
-         Qij_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
-         Qij_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs),
-         Qij = sum(Qij_18, Qij_45, Qij_65)) %>% 
-  select(BlockGroup, Tract, Qij, Qij_18, Qij_45, Qij_65)
+calculate_age_groups <- function(data, group_var) {
+  # Define the age categories and corresponding columns
+  age_categories <- list(
+    age_18 = c('Male18to19Yrs', 'Male20Yrs', 'Male21Yrs', 'Male22to24Yrs', 'Male25to29Yrs', 'Male30to34Yrs', 'Male35to39Yrs', 'Male40to44Yrs', 
+            'Female18to19Yrs', 'Female20Yrs', 'Female21Yrs', 'Female22to24Yrs', 'Female25to29Yrs', 'Female30to34Yrs', 'Female35to39Yrs', 'Female40to44Yrs'),
+    age_45 = c('Male45to49Yrs', 'Male50to54Yrs', 'Male55to59Yrs', 'Male60to61Yrs', 'Male62to64Yrs', 
+            'Female45to49Yrs', 'Female50to54Yrs', 'Female55to59Yrs', 'Female60to61Yrs', 'Female62to64Yrs'),
+    age_65 = c('Male65to66Yrs', 'Male67to69Yrs', 'Male70to74Yrs', 'Male75to79Yrs', 'Male80to84Yrs', 'MaleGE85Yrs', 
+            'Female65to66Yrs', 'Female67to69Yrs', 'Female70to74Yrs', 'Female75to79Yrs', 'Female80to84Yrs', 'FemaleGE85Yrs')
+  )
+
+  # Determine the prefix based on the grouping variable
+  prefix <- if (group_var == 'Tract') 'Qi' else 'Qij'
+
+  # Perform the grouping and mutation
+ result <- data %>%
+   group_by(!!sym(group_var)) %>%
+   mutate(
+     across(all_of(unlist(age_categories)), ~sum(.x, na.rm = TRUE), .names = "{.col}"),
+     "{prefix}_18" := sum(!!!syms(age_categories$age_18), na.rm = TRUE),
+     "{prefix}_45" := sum(!!!syms(age_categories$age_45), na.rm = TRUE),
+     "{prefix}_65" := sum(!!!syms(age_categories$age_65), na.rm = TRUE)) %>%
+   mutate("{prefix}" := !!sym(paste0(prefix, "_18")) + !!sym(paste0(prefix, "_45")) + !!sym(paste0(prefix, "_65"))) %>%
+   select(!!sym(group_var), !!sym(paste0(prefix)), !!sym(paste0(prefix, "_18")), !!sym(paste0(prefix, "_45")), !!sym(paste0(prefix, "_65"))) %>%
+   unique()
+
+  return(result)
+}
 ```
 
 
 ```{r}
+bg_data <- calculate_age_groups(data, 'BlockGroup') %>%
+  mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup)
 bg_data
 ```
 
 
 ```{r}
-# number of population counts by domain and across domains in PSU i
-tract_data <- data %>% 
-  group_by(Tract) %>%
-  mutate(Qi_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
-         Qi_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
-         Qi_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs)) %>% 
-  select(Tract, Qi_18, Qi_45, Qi_65) %>%
-  unique() %>%
-  mutate(Q_i = sum(Qi_18, Qi_45, Qi_65)) 
-
+tract_data <- calculate_age_groups(data, 'Tract') 
 tract_data
+```
 
-# number of population
-Q <- sum(tract_data$Q_i)
+
+```{r}
+Q <- sum(tract_data$Qi)
 Q
 ```
 
@@ -286,7 +301,7 @@ undersized_bg
 any(q_avg > bg_data$Qij) # FALSE -> condition met 
 
 # 3. n*q_avg <= Q_i+ in every SSU 
-any(1*q_avg > tract_data$Q_i) # FALSE -> condition met 
+any(1*q_avg > tract_data$Qi) # FALSE -> condition met 
 
 # 4. check selection prob <= 1 
 # pi_i 
@@ -312,7 +327,7 @@ $$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{ij} = m_{SSU} \frac{S_{ij}}{S_i}$$
 ### combine the undersized block group with the next block group in its tract
 
 ```{r}
-data$BlockGroup[data$BlockGroup == "240338011061"] <- "240338011062"
+# data$BlockGroup[data$BlockGroup == "240338011061"] <- "240338011062"
 ```
 
 ### descriptive statistics of the final frame 
@@ -328,22 +343,9 @@ frame_data <- frame_data %>%
 
 ```{r}
 ## update tract data and bg data 
-tract_data <- frame_data %>% 
-  group_by(Tract) %>%
-  mutate(Qi_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
-         Qi_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
-         Qi_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs)) %>% 
-  select(Tract, Qi_18, Qi_45, Qi_65) %>%
-  unique() %>%
-  mutate(Q_i = sum(Qi_18, Qi_45, Qi_65)) 
-
-bg_data <- frame_data %>% 
-  group_by(BlockGroup) %>%
-  mutate(Qij_18 = sum(Male18to19Yrs, Male20Yrs, Male21Yrs, Male22to24Yrs, Male25to29Yrs, Male30to34Yrs, Male35to39Yrs, Male40to44Yrs, Female18to19Yrs, Female20Yrs, Female21Yrs, Female22to24Yrs, Female25to29Yrs, Female30to34Yrs, Female35to39Yrs, Female40to44Yrs),
-         Qij_45 = sum(Male45to49Yrs, Male50to54Yrs, Male55to59Yrs, Male60to61Yrs, Male62to64Yrs, Female45to49Yrs, Female50to54Yrs, Female55to59Yrs, Female60to61Yrs, Female62to64Yrs),
-         Qij_65 = sum(Male65to66Yrs, Male67to69Yrs, Male70to74Yrs, Male75to79Yrs, Male80to84Yrs, MaleGE85Yrs, Female65to66Yrs, Female67to69Yrs, Female70to74Yrs, Female75to79Yrs, Female80to84Yrs, FemaleGE85Yrs),
-         Qij = sum(Qij_18, Qij_45, Qij_65)) %>% 
-  select(BlockGroup, Tract, Qij, Qij_18, Qij_45, Qij_65)
+tract_data <- calculate_age_groups(data, 'Tract') 
+bg_data <- calculate_age_groups(frame_data, 'BlockGroup') %>%
+  mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup)
 ```
 
 
@@ -385,6 +387,8 @@ bg_data <- bg_data %>%
   left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
   mutate(pi_ij = m_2 * S_ij / S_i)
 ```
+
+
 
 
 # Sampling 
