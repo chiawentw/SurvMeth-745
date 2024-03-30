@@ -48,7 +48,6 @@ data_initial <- read_excel("PrinceGeorgeMD.xlsx", sheet=2)
 ```
 
 
-
 ```{r}
 data_initial <- data_initial %>%
   arrange(BlockGroup) %>%
@@ -123,10 +122,14 @@ data <- read_excel("PrinceGeorgeMD_modified.xlsx", sheet = 2)
 data <- data %>% 
   na.omit() %>%
   mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup)
-
 ```
 
-### 
+```{r}
+dim(data)
+```
+
+
+### Assign composite MOS 
 
 ```{r}
 # number of total PSUs
@@ -168,9 +171,8 @@ q_avg <- n_sum/m
 q_avg ## 28.47805
 
 # expected sample size for each domain across PSUs selected
-n_avg <- n_sum/3
+n_avg <- n_sum/15 ## changed from n_sum/3 to n_sum/15 
 n_avg
-
 ```
 
 ```{r}
