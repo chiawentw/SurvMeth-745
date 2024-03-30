@@ -338,48 +338,31 @@ frame_data <- read_excel("PrinceGeorgeMD_final.xlsx", sheet = 2)
 frame_data <- frame_data %>% 
   na.omit() %>%
   mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup)
-```
 
-
-```{r}
 ## update tract data and bg data 
-tract_data <- calculate_age_groups(data, 'Tract') 
+tract_data <- calculate_age_groups(data, 'Tract') %>%
+  mutate(S_i= Qi_18*f_1 + Qi_45*f_2 + Qi_65*f_3, # composite MOS for PSU i 
+         S_i_18 = Qi_18*f_1,
+         S_i_45 = Qi_45*f_2,
+         S_i_65 = Qi_65*f_3,
+         q_i_18 = n_avg*f_1*Qi_18/S_i,
+         q_i_45 = n_avg*f_2*Qi_45/S_i,
+         q_i_65 = n_avg*f_3*Qi_65/S_i)
+
 bg_data <- calculate_age_groups(frame_data, 'BlockGroup') %>%
-  mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup)
+  mutate(Tract = substr(BlockGroup, 1, nchar(BlockGroup) - 1), .before = BlockGroup,
+         S_ij = Qij_18*f_1 + Qij_45*f_2 + Qij_65*f_3, # composite MOS for SSU j at PSU i 
+         qij_18 = q_avg*f_1*Qij_18/S_ij,
+         qij_45 = q_avg*f_2*Qij_45/S_ij,
+         qij_65 = q_avg*f_3*Qij_65/S_ij)
+
 ```
 
 
 ```{r}
-tract_data <- tract_data %>%
-  mutate(S_i= Qi_18*f_1 + Qi_45*f_2 + Qi_65*f_3, # composite MOS for PSU i 
-         S_i_18 = Qi_18*f_1,
-         S_i_45 = Qi_45*f_2,
-         S_i_65 = Qi_65*f_3,
-         q_i_18 = n_avg*f_1*Qi_18/S_i,
-         q_i_45 = n_avg*f_2*Qi_45/S_i,
-         q_i_65 = n_avg*f_3*Qi_65/S_i)
-
-tract_data <- tract_data %>%
-  mutate(S_i= Qi_18*f_1 + Qi_45*f_2 + Qi_65*f_3, # composite MOS for PSU i 
-         S_i_18 = Qi_18*f_1,
-         S_i_45 = Qi_45*f_2,
-         S_i_65 = Qi_65*f_3,
-         q_i_18 = n_avg*f_1*Qi_18/S_i,
-         q_i_45 = n_avg*f_2*Qi_45/S_i,
-         q_i_65 = n_avg*f_3*Qi_65/S_i)
-
 # selection probability of each PSU
 tract_data <- tract_data %>%
   mutate(pi_i = m*S_i/S_all)
-```
-
-
-```{r}
-bg_data <- bg_data %>%
-  mutate(S_ij = Qij_18*f_1 + Qij_45*f_2 + Qij_65*f_3, # composite MOS for SSU j at PSU i 
-         qij_18 = q_avg*f_1*Qij_18/S_ij,
-         qij_45 = q_avg*f_2*Qij_45/S_ij,
-         qij_65 = q_avg*f_3*Qij_65/S_ij) 
 
 # selection probability of each SSU
 m_2 <- 1 
@@ -387,9 +370,6 @@ bg_data <- bg_data %>%
   left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
   mutate(pi_ij = m_2 * S_ij / S_i)
 ```
-
-
-
 
 # Sampling 
 
