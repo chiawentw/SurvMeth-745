@@ -208,10 +208,6 @@ Q <- sum(tract_data$Q_i)
 Q
 ```
 
-```{r}
-
-```
-
 
 ```{r}
 # number of total populations by domains across PSUs
@@ -317,8 +313,6 @@ $$\pi_{ij} = m \frac{S_{ij}}{S_i}$$
 data$BlockGroup[data$BlockGroup == "240338011061"] <- "240338011062"
 ```
 
-
-
 # Sampling 
 
 ## 1st stage - 15 PSU 
@@ -413,7 +407,7 @@ leaflet() %>%
               fillOpacity = 0,
               fillColor= "snow") %>%
   addPolygons(data=PG_bg_trans,
-              popup = ~paste("Block Group": GEOID),
+              popup = ~paste("BG", GEOID),
               color = "black",
               weight = 1,
               opacity= 1,
@@ -429,6 +423,20 @@ leaflet() %>%
 selected_psu_data <- selected_psu_data %>% 
   left_join(N_i %>% distinct(Tract, n), by = "Tract")
 
+selcted_psu_IDs <- selected_psu_data$Tract
+
+selected_psu_geodata <- PG_tract_trans %>%
+  filter(GEOID %in% selcted_psu_IDs)
+
+selected_ssu_IDs <- selected_ssu_data$BlockGroup
+selected_ssu_geodata <- PG_bg_trans %>%
+  filter(GEOID %in% selected_ssu_IDs)
+
+```
+
+
+
+```{r}
 leaflet() %>%
   addTiles() %>%
   addPolygons(data = PG_tract_trans,
@@ -436,7 +444,7 @@ leaflet() %>%
               fillOpacity = 0,
               fillColor= "snow") %>%
   addPolygons(data=PG_bg_trans,
-              popup = ~paste("Block Group": GEOID),
+              popup = ~paste("Block Group", GEOID),
               color = "black",
               weight = 2,
               opacity= 1,
@@ -444,18 +452,18 @@ leaflet() %>%
               fillOpacity = 0,
               fillColor= "snow") %>%
   # Selected Tracts
-  addPolygons(data = selected_psu_data,
+  addPolygons(data = selected_psu_geodata,
               color='orange',
-              popup = ~paste("Sampled", "<br>", "Tract": Tract, "<br>", "Block Group Count:", n), 
+              popup = ~paste("Sampled", "<br>", "Tract", GEOID), 
               weight = 1, 
-              fillOpacity = 0,
-              fillColor="snow") %>% 
+              fillOpacity = 0.5,
+              fillColor="orange") %>% 
   # Selected Block Groups
-  addPolygons(data = selected_ssu_data,
-              color ='yellow',
-              popup = ~paste("Sampled", "<br>", "Block Group": BlockGroup), 
+  addPolygons(data = selected_ssu_geodata,
+              color ='darkorange',
+              popup = ~paste("Sampled", "<br>", "Block Group", GEOID), 
               weight = 0.7, 
               fillOpacity = 1,
-              fillColor = "yellow")
+              fillColor = "darkorange")
               
 ```
