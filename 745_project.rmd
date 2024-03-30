@@ -442,12 +442,14 @@ leaflet() %>%
   addTiles() %>%
   addPolygons(data = PG_tract_trans,
               popup = ~NAME,
+              color = "forestgreen",
+              opacity = 1, 
               fillOpacity = 0,
               fillColor= "snow") %>%
   addPolygons(data=PG_bg_trans,
               popup = ~paste("Block Group", GEOID),
               color = "black",
-              weight = 2,
+              weight = 1,
               opacity= 1,
               smoothFactor = 1,
               fillOpacity = 0,
