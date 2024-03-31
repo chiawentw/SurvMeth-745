@@ -237,6 +237,7 @@ target <- target %>%
   mutate(Q_d = c(Q_18, Q_45, Q_65),
          f_d = n_weighted / Q_d)
 target$f_d*100 # f_d ()
+target
 ```
 
 
@@ -360,6 +361,46 @@ bg_data <- calculate_age_groups(frame_data, 'BlockGroup') %>%
 
 
 ```{r}
+summary(tract_data$S_i)
+```
+
+```{r}
+summary(bg_data$S_ij)
+```
+
+
+```{r}
+sum(tract_data$S_i)
+```
+
+```{r}
+sum(bg_data$S_ij)
+```
+
+
+```{r, fig.width=6, fig.height=4}
+combined_data <- rbind(
+  data.frame(value = bg_data$S_ij, source = 'BG'),
+  data.frame(value = tract_data$S_i, source = 'Tract')
+)
+
+ggplot(combined_data, aes(x = value, fill = source)) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Value", y = "Density",
+       fill = "Unit") +
+  scale_fill_manual(values = c('BG' = 'blue', 'Tract' = 'red')) +
+  theme(
+    panel.background = element_rect(fill = "white", colour = "white"),  # Set panel background to white
+    panel.grid.major = element_blank(),  # Remove major grid lines
+    panel.grid.minor = element_blank(),  # Remove minor grid lines
+    axis.line = element_line(colour = "black"),  # Add axis lines
+    legend.position = c(0.8, 0.8)
+  )
+```
+
+# Sampling 
+
+```{r}
 # selection probability of each PSU
 tract_data <- tract_data %>%
   mutate(pi_i = m*S_i/S_all)
@@ -370,8 +411,6 @@ bg_data <- bg_data %>%
   left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
   mutate(pi_ij = m_2 * S_ij / S_i)
 ```
-
-# Sampling 
 
 ## 1st stage - 15 PSU 
 ```{r}
