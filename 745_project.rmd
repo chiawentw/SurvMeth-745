@@ -451,6 +451,37 @@ selected_ssu_data
 write_xlsx(selected_ssu_data, "sample.xlsx")
 ```
 
+### check selected units and characteristics
+
+```{r}
+selected_characteristics <- frame_data %>% 
+  filter(BlockGroup %in% selected_ssu_data$BlockGroup)
+selected_characteristics <- selected_characteristics[, -c(3:10, 30:34)]
+selected_characteristics <- selected_characteristics %>% 
+  mutate(age_18_male = rowSums(selected_characteristics[c("Male18to19Yrs", "Male20Yrs", "Male21Yrs", "Male22to24Yrs", "Male25to29Yrs", "Male30to34Yrs", "Male35to39Yrs", "Male40to44Yrs")])) %>% 
+  mutate(age_45_male = rowSums(selected_characteristics[c("Male45to49Yrs", "Male50to54Yrs", "Male55to59Yrs", "Male60to61Yrs", "Male62to64Yrs")])) %>% 
+  mutate(age_65_male = rowSums(selected_characteristics[c("Male65to66Yrs", "Male67to69Yrs", "Male70to74Yrs", "Male75to79Yrs", "Male80to84Yrs", "MaleGE85Yrs")])) %>%
+  mutate(age_18_female = rowSums(selected_characteristics[c("Female18to19Yrs", "Female20Yrs", "Female21Yrs", "Female22to24Yrs", "Female25to29Yrs", "Female30to34Yrs", "Female35to39Yrs", "Female40to44Yrs")])) %>% 
+  mutate(age_45_female = rowSums(selected_characteristics[c("Female45to49Yrs", "Female50to54Yrs", "Female55to59Yrs", "Female60to61Yrs", "Female62to64Yrs")])) %>% 
+  mutate(age_65_female = rowSums(selected_characteristics[c("Female65to66Yrs", "Female67to69Yrs", "Female70to74Yrs", "Female75to79Yrs", "Female80to84Yrs", "FemaleGE85Yrs")]))
+
+
+selected_characteristics <- selected_characteristics %>%
+  mutate(percentage = select(selected_characteristics, starts_with("age_")) / rowSums(select(selected_characteristics, starts_with("age_"))) * 100)
+
+
+# Plot
+ggplot(selected_characteristics, aes(x = BlockGroup)) +
+  geom_bar(aes(y = percentage, fill = variable), position = "stack", stat = "identity") +
+  labs(title = "Percentage of Age and Gender Groups within each Selected Block Groups",
+       x = "Selected Block Groups",
+       y = "Percentage") +
+  scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "green", "age_65_male" = "red", 
+                                "age_18_female" = "lightblue", "age_45_female" = "lightgreen", "age_65_female" = "pink"),
+                    name = "Age and Gender Groups") +
+  theme_minimal()
+```
+
 
 ### 7. Map
 
