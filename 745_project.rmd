@@ -285,6 +285,7 @@ m_2 <- 1
 bg_data <- bg_data %>%
   left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
   mutate(pi_ij = m_2 * S_ij / S_i)
+S_all_j <- sum(bg_data$S_ij)
 
 bg_data
 ```
@@ -321,7 +322,7 @@ bg_data %>%
   filter(Tract == "24033801106")
 ```
 
-$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{ij} = m_{SSU} \frac{S_{ij}}{S_i}$$ 
+$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{j|i} = m_{SSU} \frac{S_{j|i}}{S_i}$$ 
 #$$\pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
 
 
