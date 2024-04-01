@@ -735,6 +735,12 @@ precision_df
 
 $$relvar(\hat{t}_{pwr})=\frac{V(\hat{t}_{pwr})}{t^2_U} = \frac{B^2}{m}+\frac{W^2_2}{m\bar n}+ \frac{W^2_3}{m\bar{n}\bar{\bar{q}}} = \frac{\tilde{V}}{m\bar{n}\bar{\bar{q}}} \{ k_1\delta_1\bar{n}\bar{\bar{q}}+k_2[1+\delta_2(\bar{\bar{q}}-1)]\} $$
 
+## Variance Estimation 
+
+$$Var(\hat{\theta}_d) = \frac{1}{R}\sum_{r=1}^R (\hat{\theta}_{r,d}-\hat{\theta}_d)^2$$
+
+$$Total\:Variance= \sum_{d=1}^D Var(\hat{\theta}_d)$$
+
 
 
 
