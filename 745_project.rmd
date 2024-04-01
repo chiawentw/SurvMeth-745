@@ -402,6 +402,11 @@ ggplot(combined_data, aes(x = value, fill = source)) +
 # Sampling 
 
 ```{r}
+sum(bg_data$pi_ij)
+```
+
+
+```{r}
 # selection probability of each PSU
 tract_data <- tract_data %>%
   mutate(pi_i = m*S_i/S_all)
@@ -411,6 +416,10 @@ m_2 <- 1
 bg_data <- bg_data %>%
   left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
   mutate(pi_ij = m_2 * S_ij / S_i)
+```
+
+```{r}
+sum(tract_data$pi_i)
 ```
 
 ## 1st stage - 15 PSU 
@@ -506,20 +515,40 @@ selected_characteristics <- selected_characteristics %>%
   mutate(age_65_female = rowSums(selected_characteristics[c("Female65to66Yrs", "Female67to69Yrs", "Female70to74Yrs", "Female75to79Yrs", "Female80to84Yrs", "FemaleGE85Yrs")]))
 
 
-selected_characteristics <- selected_characteristics %>%
-  mutate(percentage = select(selected_characteristics, starts_with("age_")) / rowSums(select(selected_characteristics, starts_with("age_"))) * 100)
+# selected_characteristics <- selected_characteristics %>%
+#   mutate(percentage = select(selected_characteristics, starts_with("age_")) / rowSums(select(selected_characteristics, starts_with("age_"))) * 100)
 
+selected_characteristics_long <- selected_characteristics %>%
+  pivot_longer(cols = starts_with("age_"), 
+               names_to = "AgeGenderGroup", 
+               values_to = "Count") %>%
+  group_by(BlockGroup) %>%
+  mutate(percentage = Count / sum(Count) * 100)
+
+selected_characteristics_long
+# selected_characteristics
 
 # Plot
-ggplot(selected_characteristics, aes(x = BlockGroup)) +
-  geom_bar(aes(y = percentage, fill = variable), position = "stack", stat = "identity") +
-  labs(title = "Percentage of Age and Gender Groups within each Selected Block Groups",
+# ggplot(selected_characteristics, aes(x = BlockGroup)) +
+#   geom_bar(aes(y = percentage, fill = group), position = "stack", stat = "identity") +
+#   labs(title = "Percentage of Age and Gender Groups within each Selected Block Groups",
+#        x = "Selected Block Groups",
+#        y = "Percentage") +
+#   scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "green", "age_65_male" = "red", 
+#                                 "age_18_female" = "lightblue", "age_45_female" = "lightgreen", "age_65_female" = "pink"),
+#                     name = "Age and Gender Groups") +
+#   theme_minimal()
+
+ggplot(selected_characteristics_long, aes(x = BlockGroup, y = percentage, fill = AgeGenderGroup)) +
+  geom_bar(position = "stack", stat = "identity") +
+  labs(title = "Percentage of Age and Gender Groups within each Selected BG",
        x = "Selected Block Groups",
        y = "Percentage") +
   scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "green", "age_65_male" = "red", 
-                                "age_18_female" = "lightblue", "age_45_female" = "lightgreen", "age_65_female" = "pink"),
+                               "age_18_female" = "lightblue", "age_45_female" = "lightgreen", "age_65_female" = "pink"),
                     name = "Age and Gender Groups") +
-  theme_minimal()
+  theme_minimal() +
+  coord_flip()
 ```
 
 
