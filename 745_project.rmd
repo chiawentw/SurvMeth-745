@@ -237,7 +237,7 @@ Q_65 <- sum(tract_data$Qi_65)
 target <- target %>%
   mutate(Q_d = c(Q_18, Q_45, Q_65),
          f_d = n_weighted / Q_d)
-target$f_d*100 # f_d ()
+target$f_d*100 # f_d () ## why are we *100?
 target
 ```
 
@@ -323,7 +323,7 @@ bg_data %>%
   filter(Tract == "24033801106")
 ```
 
-$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{j|i} = m_{SSU} \frac{S_{j|i}}{S_i}, \quad \pi_{k|ij} (d) = \frac{q_{j|i}(d)}{Q_{j|i}(d)}$$ 
+$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{j|i} = m_{SSU} \frac{S_{ij}}{S_i}, \quad \pi_{k|ij} (d) = \frac{q_{ij}(d)}{Q_{ij}(d)}$$
 
 
 
@@ -364,9 +364,9 @@ bg_data <- calculate_age_groups(frame_data, 'BlockGroup') %>%
 
 ```{r}
 bg_data <- bg_data %>% 
-  mutate(pi_ijk_18 = qij_18/Qij_18*100,
-         pi_ijk_45 = qij_45/Qij_45*100,
-         pi_ijk_65 = qij_65/Qij_65*100)
+  mutate(pi_ijk_18 = qij_18/Qij_18,
+         pi_ijk_45 = qij_45/Qij_45,
+         pi_ijk_65 = qij_65/Qij_65)
 
 ```
 
@@ -413,19 +413,8 @@ ggplot(combined_data, aes(x = value, fill = source)) +
 # Sampling 
 
 ```{r}
-# selection probability of each PSU
-tract_data <- tract_data %>%
-  mutate(pi_i = m*S_i/S_all)
-
-# selection probability of each SSU
-m_2 <- 1 
-bg_data <- bg_data %>%
-  left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
-  mutate(pi_ij = m_2 * S_ij / S_i)
-```
-
-```{r}
 sum(tract_data$pi_i)
+sum(bg_data$pi_ij)
 ```
 
 
@@ -554,9 +543,9 @@ ggplot(selected_characteristics_long, aes(x = BlockGroup, y = percentage, fill =
 ```{r}
 check <- selected_ssu_data %>%
   select(Tract, BlockGroup, pi_ij, pi_ijk_18, pi_ijk_45, pi_ijk_65) %>%
-  mutate(f_18 = target$f_d[1]*100,
-         f_45 = target$f_d[2]*100,
-         f_65 = target$f_d[3]*100) 
+  mutate(f_18 = target$f_d[1],
+         f_45 = target$f_d[2],
+         f_65 = target$f_d[3]) 
 check <- check %>% 
   mutate(pi_i = tract_data %>% 
            filter(Tract %in% check$Tract) %>% 
@@ -568,7 +557,6 @@ round(check$f_18, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_18, 4)
 round(check$f_45, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_45, 4)
 ## True
 round(check$f_65, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_65, 4)
-## True
 ```
 
 ### 7. Map
@@ -659,7 +647,8 @@ FRAME_ChiaWen_Mingqian <- frame_data %>%
             'Female45to49Yrs', 'Female50to54Yrs', 'Female55to59Yrs', 'Female60to61Yrs', 'Female62to64Yrs',
     'Male65to66Yrs', 'Male67to69Yrs', 'Male70to74Yrs', 'Male75to79Yrs', 'Male80to84Yrs', 'MaleGE85Yrs', 
             'Female65to66Yrs', 'Female67to69Yrs', 'Female70to74Yrs', 'Female75to79Yrs', 'Female80to84Yrs', 'FemaleGE85Yrs') %>% 
-  left_join(tract_data, frame_data, by = 'Tract')
+  left_join(tract_data, frame_data, by = 'Tract') %>% 
+  select(-c("Qi", "Qi_18", "Qi_45", "Qi_65", "q_i_18", "q_i_45", "q_i_65", "pi_i"))
   
 write_xlsx(FRAME_ChiaWen_Mingqian, "FRAME_Chia Wen+Mingqian.xlsx")
 
@@ -673,7 +662,13 @@ SAMPLE_ChiaWen_Mingqian <- frame_data %>%
     'Male65to66Yrs', 'Male67to69Yrs', 'Male70to74Yrs', 'Male75to79Yrs', 'Male80to84Yrs', 'MaleGE85Yrs', 
             'Female65to66Yrs', 'Female67to69Yrs', 'Female70to74Yrs', 'Female75to79Yrs', 'Female80to84Yrs', 'FemaleGE85Yrs') %>%
   filter(BlockGroup %in% selected_ssu_data$BlockGroup) %>% 
-  left_join(selected_ssu_data, frame_data, by = 'BlockGroup')
+  left_join(selected_ssu_data, frame_data, by = 'BlockGroup')%>% 
+  select(-c("Tract.y", "ID_unit"))
+SAMPLE_ChiaWen_Mingqian <- SAMPLE_ChiaWen_Mingqian %>% 
+  mutate(pi_i = tract_data %>% 
+           filter(Tract %in% SAMPLE_ChiaWen_Mingqian$Tract.x) %>% 
+           pull(pi_i))
+
 
 write_xlsx(SAMPLE_ChiaWen_Mingqian, "SAMPLE_Chia Wen+Mingqian.xlsx")
 ```
@@ -741,7 +736,7 @@ $$Var(\hat{\theta}_d) = \frac{1}{R}\sum_{r=1}^R (\hat{\theta}_{r,d}-\hat{\theta}
 
 $$Total\:Variance= \sum_{d=1}^D Var(\hat{\theta}_d)$$
 
-
+$$Total\:Variance= \sum_{d=1}^D w_dVar(\hat{\theta}_d)$$
 
 
 
