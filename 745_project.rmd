@@ -402,11 +402,6 @@ ggplot(combined_data, aes(x = value, fill = source)) +
 # Sampling 
 
 ```{r}
-sum(bg_data$pi_ij)
-```
-
-
-```{r}
 # selection probability of each PSU
 tract_data <- tract_data %>%
   mutate(pi_i = m*S_i/S_all)
