@@ -36,6 +36,7 @@ library(tidycensus)
 library(readxl)
 library(writexl)
 library(sampling)
+library(PracTools)
 options(tigris_class = "sf")
 options(tigris_use_cache = T)
 set.seed(-1234)
@@ -370,12 +371,7 @@ bg_data <- bg_data %>%
 ```
 
 
-### checking self-weighting
 
-```{r}
-check <- bg_data %>% 
-  
-```
 ```{r}
 summary(tract_data$S_i)
 ```
@@ -427,6 +423,11 @@ bg_data <- bg_data %>%
   left_join(tract_data %>% distinct(Tract, S_i), by = "Tract") %>% 
   mutate(pi_ij = m_2 * S_ij / S_i)
 ```
+
+```{r}
+sum(tract_data$pi_i)
+```
+
 
 ## 1st stage - 15 PSU 
 ```{r}
@@ -520,23 +521,55 @@ selected_characteristics <- selected_characteristics %>%
   mutate(age_45_female = rowSums(selected_characteristics[c("Female45to49Yrs", "Female50to54Yrs", "Female55to59Yrs", "Female60to61Yrs", "Female62to64Yrs")])) %>% 
   mutate(age_65_female = rowSums(selected_characteristics[c("Female65to66Yrs", "Female67to69Yrs", "Female70to74Yrs", "Female75to79Yrs", "Female80to84Yrs", "FemaleGE85Yrs")]))
 
-
 selected_characteristics <- selected_characteristics %>%
   mutate(percentage = select(selected_characteristics, starts_with("age_")) / rowSums(select(selected_characteristics, starts_with("age_"))) * 100)
 
+selected_characteristics_long <- selected_characteristics %>%
+  pivot_longer(cols = starts_with("age_"), 
+               names_to = "AgeGenderGroup", 
+               values_to = "Count") %>%
+  group_by(BlockGroup) %>%
+  mutate(percentage = Count / sum(Count) * 100)
+
+selected_characteristics_long
+# selected_characteristics
 
 # Plot
-ggplot(selected_characteristics, aes(x = BlockGroup)) +
-  geom_bar(aes(y = percentage, fill = percenta), position = "stack", stat = "identity") +
-  labs(title = "Percentage of Age and Gender Groups within each Selected Block Groups",
-       x = "Selected Block Groups",
+ggplot(selected_characteristics_long, aes(x = BlockGroup, y = percentage, fill = AgeGenderGroup)) +
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Selected Block Groups",
        y = "Percentage") +
-  scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "green", "age_65_male" = "red", 
-                                "age_18_female" = "lightblue", "age_45_female" = "lightgreen", "age_65_female" = "pink"),
-                    name = "Age and Gender Groups") +
-  theme_minimal()
+  scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "orange", "age_65_male" = "red", "age_18_female" = "lightblue", "age_45_female" = "yellow", "age_65_female" = "pink"),
+                    name = "Age and Gender Groups",
+                    labels = c("Female age 18-44", "Male age 18-44", "Female age 45-64", 
+               "Male age 45-64", "Female age 65+", "Male age 65+")) +
+  theme_minimal() + 
+  coord_flip()
+
 ```
 
+
+### check self-weighting
+
+```{r}
+check <- selected_ssu_data %>%
+  select(Tract, BlockGroup, pi_ij, pi_ijk_18, pi_ijk_45, pi_ijk_65) %>%
+  mutate(f_18 = target$f_d[1]*100,
+         f_45 = target$f_d[2]*100,
+         f_65 = target$f_d[3]*100) 
+check <- check %>% 
+  mutate(pi_i = tract_data %>% 
+           filter(Tract %in% check$Tract) %>% 
+           pull(pi_i))
+
+
+round(check$f_18, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_18, 4)
+## True
+round(check$f_45, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_45, 4)
+## True
+round(check$f_65, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_65, 4)
+## True
+```
 
 ### 7. Map
 
@@ -644,3 +677,45 @@ SAMPLE_ChiaWen_Mingqian <- frame_data %>%
 
 write_xlsx(SAMPLE_ChiaWen_Mingqian, "SAMPLE_Chia Wen+Mingqian.xlsx")
 ```
+
+
+## Precision Anticipation
+
+
+```{r}
+simulate_target <- bg_data %>%
+  left_join(tract_data %>% distinct(Tract, pi_i), by = "Tract") %>%
+  select("Tract", "BlockGroup", "Qij", "pi_i", "pi_ij")
+simulate_data <- simulate_target[rep(seq_len(nrow(simulate_target)), simulate_target$Qij), ]
+```
+
+```{r}
+probabilities <- c(0.3, 0.6, 0.9)
+
+# Simulate y values for each proportion
+for (p in probabilities) {
+  column_name <- paste("y", p * 10, sep = "")
+  simulate_data[[column_name]] <- rbinom(nrow(simulate_data), 1, p)
+}
+```
+
+
+```{r}
+simulate_data
+```
+
+
+```{r}
+pp.tract <- table(simulate_data$Tract) / nrow(simulate_data)
+  
+round(rbind(y3=BW3stagePPS(X=simulate_data$y3, pp=pp.tract,
+                           psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup),
+            y6=BW3stagePPS(X=simulate_data$y6, pp=pp.tract,
+                           psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup),
+            y9=BW3stagePPS(X=simulate_data$y9, pp=pp.tract,
+                           psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup)),
+      digits=4)
+```
+
+
+
