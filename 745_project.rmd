@@ -322,8 +322,8 @@ bg_data %>%
   filter(Tract == "24033801106")
 ```
 
-$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{j|i} = m_{SSU} \frac{S_{j|i}}{S_i}$$ 
-#$$\pi_{k|i}(d) = \frac{n_i^*(d)}{N_i(d)}$$
+$$\pi_i = m_{PSU} \frac{S_i}{S_+}, \quad \pi_{j|i} = m_{SSU} \frac{S_{j|i}}{S_i}, \quad \pi_{k|ij} (d) = \frac{q_{j|i}(d)}{Q_{j|i}(d)}$$ 
+
 
 
 ### combine the undersized block group with the next block group in its tract
@@ -360,6 +360,14 @@ bg_data <- calculate_age_groups(frame_data, 'BlockGroup') %>%
 
 ```
 
+
+```{r}
+bg_data <- bg_data %>% 
+  mutate(pi_ijk_18 = qij_18/Qij_18*100,
+         pi_ijk_45 = qij_45/Qij_45*100,
+         pi_ijk_65 = qij_65/Qij_65*100)
+
+```
 
 ```{r}
 summary(tract_data$S_i)
