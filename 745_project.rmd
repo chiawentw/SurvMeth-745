@@ -536,9 +536,10 @@ ggplot(selected_characteristics_long, aes(x = BlockGroup, y = percentage, fill =
   labs(title = "Percentage of Age and Gender Groups within each Selected Block Groups",
        x = "Selected Block Groups",
        y = "Percentage") +
-  scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "orange", "age_65_male" = "red",
-                               "age_18_female" = "lightblue", "age_45_female" = "yellow", "age_65_female" = "pink"),
-                    name = "Age and Gender Groups") +
+  scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "orange", "age_65_male" = "red", "age_18_female" = "lightblue", "age_45_female" = "yellow", "age_65_female" = "pink"),
+                    name = "Age and Gender Groups",
+                    labels = c("Female age 18-44", "Male age 18-44", "Female age 45-64", 
+               "Male age 45-64", "Female age 65+", "Male age 65+")) +
   theme_minimal() + 
   coord_flip()
 
