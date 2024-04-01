@@ -370,6 +370,8 @@ bg_data <- bg_data %>%
 
 ```
 
+
+
 ```{r}
 summary(tract_data$S_i)
 ```
@@ -425,6 +427,7 @@ bg_data <- bg_data %>%
 ```{r}
 sum(tract_data$pi_i)
 ```
+
 
 ## 1st stage - 15 PSU 
 ```{r}
@@ -545,6 +548,28 @@ ggplot(selected_characteristics_long, aes(x = BlockGroup, y = percentage, fill =
 
 ```
 
+
+### check self-weighting
+
+```{r}
+check <- selected_ssu_data %>%
+  select(Tract, BlockGroup, pi_ij, pi_ijk_18, pi_ijk_45, pi_ijk_65) %>%
+  mutate(f_18 = target$f_d[1]*100,
+         f_45 = target$f_d[2]*100,
+         f_65 = target$f_d[3]*100) 
+check <- check %>% 
+  mutate(pi_i = tract_data %>% 
+           filter(Tract %in% check$Tract) %>% 
+           pull(pi_i))
+
+
+round(check$f_18, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_18, 4)
+## True
+round(check$f_45, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_45, 4)
+## True
+round(check$f_65, 4) == round(check$pi_i*check$pi_ij*check$pi_ijk_65, 4)
+## True
+```
 
 ### 7. Map
 
