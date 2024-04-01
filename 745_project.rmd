@@ -533,8 +533,7 @@ selected_characteristics_long
 # Plot
 ggplot(selected_characteristics_long, aes(x = BlockGroup, y = percentage, fill = AgeGenderGroup)) +
   geom_bar(position = "stack", stat = "identity") +
-  labs(title = "Percentage of Age and Gender Groups within each Selected Block Groups",
-       x = "Selected Block Groups",
+  labs(x = "Selected Block Groups",
        y = "Percentage") +
   scale_fill_manual(values = c("age_18_male" = "blue", "age_45_male" = "orange", "age_65_male" = "red", "age_18_female" = "lightblue", "age_45_female" = "yellow", "age_65_female" = "pink"),
                     name = "Age and Gender Groups",
