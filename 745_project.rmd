@@ -702,14 +702,36 @@ simulate_data
 ```{r}
 pp.tract <- table(simulate_data$Tract) / nrow(simulate_data)
   
-round(rbind(y3=BW3stagePPS(X=simulate_data$y3, pp=pp.tract,
+precision_df <- round(rbind(y3=BW3stagePPS(X=simulate_data$y3, pp=pp.tract,
                            psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup),
             y6=BW3stagePPS(X=simulate_data$y6, pp=pp.tract,
                            psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup),
             y9=BW3stagePPS(X=simulate_data$y9, pp=pp.tract,
                            psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup)),
       digits=4)
+
+precision_df <- as.data.frame(precision_df)
 ```
+
+```{r}
+precision_df
+```
+
+
+
+```{r}
+precision_df <- precision_df %>%
+  mutate(relvar = `unit relvar` / (15*1*q_avg) * (k1*delta1*1*q_avg + k2*(1+delta2*(q_avg-1))))
+
+precision_df
+```
+
+
+$$relvar(\hat{t}_{pwr})=\frac{V(\hat{t}_{pwr})}{t^2_U} = \frac{B^2}{m}+\frac{W^2_2}{m\bar n}+ \frac{W^2_3}{m\bar{n}\bar{\bar{q}}} = \frac{\tilde{V}}{m\bar{n}\bar{\bar{q}}} \{ k_1\delta_1\bar{n}\bar{\bar{q}}+k_2[1+\delta_2(\bar{\bar{q}}-1)]\} $$
+
+
+
+
 
 
 
