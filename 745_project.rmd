@@ -414,6 +414,7 @@ ggplot(combined_data, aes(x = value, fill = source)) +
 
 ```{r}
 sum(tract_data$pi_i)
+sum(bg_data$pi_ij)
 ```
 
 
