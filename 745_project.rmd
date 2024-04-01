@@ -36,6 +36,7 @@ library(tidycensus)
 library(readxl)
 library(writexl)
 library(sampling)
+library(PracTools)
 options(tigris_class = "sf")
 options(tigris_use_cache = T)
 set.seed(-1234)
@@ -651,3 +652,45 @@ SAMPLE_ChiaWen_Mingqian <- frame_data %>%
 
 write_xlsx(SAMPLE_ChiaWen_Mingqian, "SAMPLE_Chia Wen+Mingqian.xlsx")
 ```
+
+
+## Precision Anticipation
+
+
+```{r}
+simulate_target <- bg_data %>%
+  left_join(tract_data %>% distinct(Tract, pi_i), by = "Tract") %>%
+  select("Tract", "BlockGroup", "Qij", "pi_i", "pi_ij")
+simulate_data <- simulate_target[rep(seq_len(nrow(simulate_target)), simulate_target$Qij), ]
+```
+
+```{r}
+probabilities <- c(0.3, 0.6, 0.9)
+
+# Simulate y values for each proportion
+for (p in probabilities) {
+  column_name <- paste("y", p * 10, sep = "")
+  simulate_data[[column_name]] <- rbinom(nrow(simulate_data), 1, p)
+}
+```
+
+
+```{r}
+simulate_data
+```
+
+
+```{r}
+pp.tract <- table(simulate_data$Tract) / nrow(simulate_data)
+  
+round(rbind(y3=BW3stagePPS(X=simulate_data$y3, pp=pp.tract,
+                           psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup),
+            y6=BW3stagePPS(X=simulate_data$y6, pp=pp.tract,
+                           psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup),
+            y9=BW3stagePPS(X=simulate_data$y9, pp=pp.tract,
+                           psuID=simulate_data$Tract, ssuID=simulate_data$BlockGroup)),
+      digits=4)
+```
+
+
+
