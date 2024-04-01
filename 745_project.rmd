@@ -369,6 +369,13 @@ bg_data <- bg_data %>%
 
 ```
 
+
+### checking self-weighting
+
+```{r}
+check <- bg_data %>% 
+  
+```
 ```{r}
 summary(tract_data$S_i)
 ```
