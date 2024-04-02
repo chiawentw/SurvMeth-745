@@ -641,26 +641,16 @@ leaflet() %>%
 ## Text files giving the units used for the area frame and relevant census counts and measures of size [filename: FRAME#_GROUPNAME.pdf]
 
 FRAME_ChiaWen_Mingqian <- frame_data %>% 
-  select('Tract', 'BlockGroup', 'NAME', 'Male18to19Yrs', 'Male20Yrs', 'Male21Yrs', 'Male22to24Yrs', 'Male25to29Yrs', 'Male30to34Yrs', 'Male35to39Yrs', 'Male40to44Yrs', 
-            'Female18to19Yrs', 'Female20Yrs', 'Female21Yrs', 'Female22to24Yrs', 'Female25to29Yrs', 'Female30to34Yrs', 'Female35to39Yrs', 'Female40to44Yrs',
-    'Male45to49Yrs', 'Male50to54Yrs', 'Male55to59Yrs', 'Male60to61Yrs', 'Male62to64Yrs', 
-            'Female45to49Yrs', 'Female50to54Yrs', 'Female55to59Yrs', 'Female60to61Yrs', 'Female62to64Yrs',
-    'Male65to66Yrs', 'Male67to69Yrs', 'Male70to74Yrs', 'Male75to79Yrs', 'Male80to84Yrs', 'MaleGE85Yrs', 
-            'Female65to66Yrs', 'Female67to69Yrs', 'Female70to74Yrs', 'Female75to79Yrs', 'Female80to84Yrs', 'FemaleGE85Yrs') %>% 
+  select('Tract', 'BlockGroup') %>% 
   left_join(tract_data, frame_data, by = 'Tract') %>% 
-  select(-c("Qi", "Qi_18", "Qi_45", "Qi_65", "q_i_18", "q_i_45", "q_i_65", "pi_i"))
+  select(-c("q_i_18", "q_i_45", "q_i_65", "pi_i"))
   
 write_xlsx(FRAME_ChiaWen_Mingqian, "FRAME_Chia Wen+Mingqian.xlsx")
 
 ## Text file for the selected sample along with relevant census counts, measures of size, selection probabilities, and weights [filename: SAMPLE_GROUPNAME.pdf]
 
 SAMPLE_ChiaWen_Mingqian <- frame_data %>% 
-  select('Tract', 'BlockGroup', 'NAME', 'Male18to19Yrs', 'Male20Yrs', 'Male21Yrs', 'Male22to24Yrs', 'Male25to29Yrs', 'Male30to34Yrs', 'Male35to39Yrs', 'Male40to44Yrs', 
-            'Female18to19Yrs', 'Female20Yrs', 'Female21Yrs', 'Female22to24Yrs', 'Female25to29Yrs', 'Female30to34Yrs', 'Female35to39Yrs', 'Female40to44Yrs',
-    'Male45to49Yrs', 'Male50to54Yrs', 'Male55to59Yrs', 'Male60to61Yrs', 'Male62to64Yrs', 
-            'Female45to49Yrs', 'Female50to54Yrs', 'Female55to59Yrs', 'Female60to61Yrs', 'Female62to64Yrs',
-    'Male65to66Yrs', 'Male67to69Yrs', 'Male70to74Yrs', 'Male75to79Yrs', 'Male80to84Yrs', 'MaleGE85Yrs', 
-            'Female65to66Yrs', 'Female67to69Yrs', 'Female70to74Yrs', 'Female75to79Yrs', 'Female80to84Yrs', 'FemaleGE85Yrs') %>%
+  select('Tract', 'BlockGroup') %>%
   filter(BlockGroup %in% selected_ssu_data$BlockGroup) %>% 
   left_join(selected_ssu_data, frame_data, by = 'BlockGroup')%>% 
   select(-c("Tract.y", "ID_unit"))
@@ -668,6 +658,12 @@ SAMPLE_ChiaWen_Mingqian <- SAMPLE_ChiaWen_Mingqian %>%
   mutate(pi_i = tract_data %>% 
            filter(Tract %in% SAMPLE_ChiaWen_Mingqian$Tract.x) %>% 
            pull(pi_i))
+SAMPLE_ChiaWen_Mingqian <- SAMPLE_ChiaWen_Mingqian %>% 
+  mutate(w_i = 1/pi_i,
+         w_ij = 1/pi_ij,
+         w_ijk_18 = 1/pi_ijk_18,
+         w_ijk_45 = 1/pi_ijk_45,
+         w_ijk_65 = 1/pi_ijk_65)
 
 
 write_xlsx(SAMPLE_ChiaWen_Mingqian, "SAMPLE_Chia Wen+Mingqian.xlsx")
