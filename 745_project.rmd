@@ -647,6 +647,11 @@ FRAME_ChiaWen_Mingqian <- frame_data %>%
   
 write_xlsx(FRAME_ChiaWen_Mingqian, "FRAME_Chia Wen+Mingqian.xlsx")
 
+
+FRAME1_ChiaWen_Mingqian <- tract_data %>%
+  select(-c(q_i_18, q_i_45, q_i_65, pi_i))
+
+write_xlsx(FRAME1_ChiaWen_Mingqian, "FRAME#1_Chia Wen+Mingqian.xlsx")
 ## Text file for the selected sample along with relevant census counts, measures of size, selection probabilities, and weights [filename: SAMPLE_GROUPNAME.pdf]
 
 SAMPLE_ChiaWen_Mingqian <- frame_data %>% 
@@ -655,6 +660,9 @@ SAMPLE_ChiaWen_Mingqian <- frame_data %>%
   left_join(selected_ssu_data, frame_data, by = 'BlockGroup')%>% 
   select(-c("Tract.y", "ID_unit"))
 SAMPLE_ChiaWen_Mingqian <- SAMPLE_ChiaWen_Mingqian %>% 
+  mutate(qij_18 = round(qij_18, 0)) %>% 
+  mutate(qij_45 = round(qij_45, 0)) %>% 
+  mutate(qij_65 = round(qij_65, 0)) %>% 
   mutate(pi_i = tract_data %>% 
            filter(Tract %in% SAMPLE_ChiaWen_Mingqian$Tract.x) %>% 
            pull(pi_i))
