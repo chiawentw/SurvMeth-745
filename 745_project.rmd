@@ -640,12 +640,13 @@ leaflet() %>%
 ```{r}
 ## Text files giving the units used for the area frame and relevant census counts and measures of size [filename: FRAME#_GROUPNAME.pdf]
 
-FRAME_ChiaWen_Mingqian <- frame_data %>% 
-  select('Tract', 'BlockGroup') %>% 
-  left_join(tract_data, frame_data, by = 'Tract') %>% 
-  select(-c("q_i_18", "q_i_45", "q_i_65", "pi_i"))
+FRAME2_ChiaWen_Mingqian <- bg_data %>% 
+  select(-c(qij_18, qij_45, qij_65, pi_ij, pi_ijk_18, pi_ijk_45, pi_ijk_65)) %>% 
+  mutate(S_ij_18 = Qij_18*f_1,
+         S_ij_45 = Qij_45*f_2,
+         S_ij_65 = Qij_65*f_3)
   
-write_xlsx(FRAME_ChiaWen_Mingqian, "FRAME_Chia Wen+Mingqian.xlsx")
+write_xlsx(FRAME2_ChiaWen_Mingqian, "FRAME#2_Chia Wen+Mingqian.xlsx")
 
 
 FRAME1_ChiaWen_Mingqian <- tract_data %>%
